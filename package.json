@@ -17,7 +17,7 @@
     "@babel/polyfill": "^7.4.4",
     "@babel/runtime-corejs2": "^7.4.5",
     "body-parser": "^1.19.0",
-    "bootstrap": "^3.3.7",
+    "bootstrap": "^3.4.1",
     "echarts": "^4.2.1",
     "ejs": "^2.6.1",
     "express": "^4.17.1",
