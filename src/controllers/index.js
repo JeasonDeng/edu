@@ -1,3 +1,4 @@
 export function indexRender(req, res, next) {
-  res.render('index.html')
+  const path = req.path
+  res.render('index.html', { path: path })
 }

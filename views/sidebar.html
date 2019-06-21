@@ -12,7 +12,7 @@
   <div class="navs">
     <ul class="list-unstyled">
       <li>
-        <a href="./index.html" class="active">
+        <a href="/" class="{{ 'active' if path === '/' else '' }}">
           <i class="fa fa-home"></i>
           仪表盘
         </a>
@@ -59,7 +59,7 @@
         </ul>
       </li>
       <li>
-        <a href="/advert">
+        <a href="/advert" class="{{ 'active' if path === '/advert' else '' }}">
           <i class="fa fa-bell"></i>
           广告管理
         </a>

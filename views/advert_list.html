@@ -42,38 +42,128 @@
             <th>操作</th>
           </tr>
         </thead>
-        <tbody>
-          {% for item in adverts %}
-          <tr>
-            <td>1</td>
-            <td>{{ item.title }}</td>
-            <td>
-              <img src="/public/uploads/{{item.image}}" style="width: 100px" alt="">
-            </td>
-            <td>{{ item.link }}</td>
-            <td>{{ item.start_time }}</td>
-            <td>{{ item.end_time }}</td>
-            <td>126</td>
-            <td>
-              <a href="javascript:;" class="btn btn-info btn-xs">编辑</a>
-              <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
+        <tbody id="tbody"></tbody>
       </table>
     </div>
     <!-- 分页 -->
-    <ul class="pagination pull-right">
-      <li class="{{ 'disabled' if 1 === currentPage else '' }}"><a href="/advert?page={{currentPage-1}}">上一页</a></li>
-      {% for i in range(0, totalPage) -%}
-      <li class="{{ 'active' if (i + 1) === currentPage else '' }}"><a href="/advert?page={{i+1}}">{{ i + 1 }}</a></li>
-      {%- endfor %}
-      <li class="{{ 'disabled' if totalPage === currentPage else '' }}"><a href="/advert?page={{ totalPage if currentPage >= totalPage else currentPage + 1 }}">下一页</a></li>
+    <ul class="pagination pull-right" id="pagination">
     </ul>
   </div>
 </div>
+<script type="text/template" id="tpl">
+  <% adverts.forEach(function (item, index) { %>
+  <tr>
+    <td><%= (page - 1) * 5 + index + 1 %></td>
+    <td><%= item.title %></td>
+    <td>
+      <img src="/public/uploads/<%=item.image%>" style="width: 100px" alt="">
+    </td>
+    <td><%= item.link %></td>
+    <td><%= item.start_time.substr(0, 10) %></td>
+    <td><%= item.end_time.substr(0, 10) %></td>
+    <td>126</td>
+    <td>
+      <a href="javascript:;" class="btn btn-info btn-xs">编辑</a>
+      <a href="javascript:;" class="btn btn-danger btn-xs" id='delete-btn' data-id="<%= item._id %>" data-page="<%= page %>">删除</a>
+    </td>
+  </tr>
+  <% }) %>
+</script>
 {% endblock %}
 
 {% block script %}
+<script src="/node_modules/art-template/lib/template-web.js"></script>
+<script src="/node_modules/twbs-pagination/jquery.twbsPagination.min.js"></script>
+
+<script>
+  var pageSize = 5
+  // $.ajax({
+  //   url: '/advert/count',
+  //   type: 'get',
+  //   dataType: 'json',
+  //   success: function (data) {
+  //     if (data.err_code === 0) {
+  //       pagination(Math.ceil(data.count / pageSize), 1)
+  //     }
+  //   }
+  // })
+
+  // 获取总页码 & 加载当前页面
+  function getTotalPageAndInit(currentPage) {
+    $('#pagination').twbsPagination('destroy')
+    $.ajax({
+      url: '/advert/count',
+      type: 'get',
+      dataType: 'json',
+      success: function (data) {
+        if (data.err_code === 0) {
+          var totalPage = Math.ceil(data.count / pageSize)
+          pagination(totalPage, currentPage)
+        }
+      }
+    })
+  }
+
+  function pagination(totalPage, currentPage) {
+    $('#pagination').twbsPagination({
+      totalPages: totalPage,
+      visiblePages: 7,
+      onPageClick: function (event, page) {
+        if(currentPage != 1) {
+          page = currentPage
+        }        
+        // console.log(currentPage)
+        console.log(page)
+        loadAdvert(page)
+      }
+    })
+  }
+
+  function loadAdvert(page) {
+    $.ajax({
+      url: '/advert/list',
+      type: 'get',
+      data: {
+        page: page,
+        pageSize: pageSize
+      },
+      dataType: 'json',
+      success: function (data) {
+        if (data.err_code === 0) {
+          if (data.adverts.length != 0) {
+            var htmlStr = template('tpl', { adverts: data.adverts, page: page })
+            $('#tbody').html(htmlStr)
+            $('body').scrollTop(0)
+          } else {
+            // loadAdvert(page -1)
+            getTotalPageAndInit(page - 1)
+          }
+        }
+      }
+    })
+  }
+
+  // 初始化页面
+  getTotalPageAndInit(1)
+
+  // 删除
+  $('#tbody').on('click', '#delete-btn', function () {
+    var page = $(this).data('page')
+    var id = $(this).data('id')
+    $.ajax({
+      url: '/advert/delete',
+      type: 'get',
+      data: {
+        id: id
+      },
+      dataType: 'json',
+      success: function (data) {
+        if (data.err_code === 0) {
+          // $('#delete-btn').parent().parent().remove()
+          loadAdvert(page)
+        }
+      }
+    })
+  })
+</script>
 {% endblock %}
