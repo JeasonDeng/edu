@@ -93,14 +93,15 @@
       },
       dataType: 'json',
       success: function (data) {
-        // console.log(Math.ceil(data.count / pageSize))
         if (data.err_code === 0) {
+          var totalPage = Math.ceil(data.count / pageSize)
           if (data.adverts.length != 0) {
             var htmlStr = template('tpl', { adverts: data.adverts, page: page })
             $('tbody').html(htmlStr)
             // 分页
+            $('#pagination').twbsPagination('destroy')
             $('#pagination').twbsPagination({
-              totalPages: Math.ceil(data.count / pageSize),
+              totalPages: totalPage,
               visiblePages: 7,
               startPage: page,
               initiateStartPageClick: false,
@@ -110,7 +111,6 @@
             })
             currentPage = page
           } else {
-            $('#pagination').twbsPagination('destroy')
             loadPage(page - 1)
           }
 
