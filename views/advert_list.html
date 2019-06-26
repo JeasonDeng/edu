@@ -64,7 +64,7 @@
     <td>126</td>
     <td>
       <a href="javascript:;" class="btn btn-info btn-xs">编辑</a>
-      <a href="javascript:;" class="btn btn-danger btn-xs" id='delete-btn' data-id="<%= item._id %>" data-page="<%= page %>">删除</a>
+      <a href="javascript:;" class="btn btn-danger btn-xs btn-del" data-id="<%= item._id %>">删除</a>
     </td>
   </tr>
   <% }) %>
@@ -76,50 +76,14 @@
 <script src="/node_modules/twbs-pagination/jquery.twbsPagination.min.js"></script>
 
 <script>
+  // 每页数量
   var pageSize = 5
-  // $.ajax({
-  //   url: '/advert/count',
-  //   type: 'get',
-  //   dataType: 'json',
-  //   success: function (data) {
-  //     if (data.err_code === 0) {
-  //       pagination(Math.ceil(data.count / pageSize), 1)
-  //     }
-  //   }
-  // })
 
-  // 获取总页码 & 加载当前页面
-  function getTotalPageAndInit(currentPage) {
-    $('#pagination').twbsPagination('destroy')
-    $.ajax({
-      url: '/advert/count',
-      type: 'get',
-      dataType: 'json',
-      success: function (data) {
-        if (data.err_code === 0) {
-          var totalPage = Math.ceil(data.count / pageSize)
-          pagination(totalPage, currentPage)
-        }
-      }
-    })
-  }
+  // 当前页
+  var currentPage = 1
 
-  function pagination(totalPage, currentPage) {
-    $('#pagination').twbsPagination({
-      totalPages: totalPage,
-      visiblePages: 7,
-      onPageClick: function (event, page) {
-        if(currentPage != 1) {
-          page = currentPage
-        }        
-        // console.log(currentPage)
-        console.log(page)
-        loadAdvert(page)
-      }
-    })
-  }
-
-  function loadAdvert(page) {
+  // 加载页面
+  function loadPage(page) {
     $.ajax({
       url: '/advert/list',
       type: 'get',
@@ -129,41 +93,50 @@
       },
       dataType: 'json',
       success: function (data) {
+        // console.log(Math.ceil(data.count / pageSize))
         if (data.err_code === 0) {
           if (data.adverts.length != 0) {
             var htmlStr = template('tpl', { adverts: data.adverts, page: page })
-            $('#tbody').html(htmlStr)
-            $('body').scrollTop(0)
+            $('tbody').html(htmlStr)
+            // 分页
+            $('#pagination').twbsPagination({
+              totalPages: Math.ceil(data.count / pageSize),
+              visiblePages: 7,
+              startPage: page,
+              initiateStartPageClick: false,
+              onPageClick: function (event, page) {
+                loadPage(page)
+              }
+            })
+            currentPage = page
           } else {
-            // loadAdvert(page -1)
-            getTotalPageAndInit(page - 1)
+            $('#pagination').twbsPagination('destroy')
+            loadPage(page - 1)
           }
+
         }
       }
     })
   }
 
   // 初始化页面
-  getTotalPageAndInit(1)
+  loadPage(1)
 
   // 删除
-  $('#tbody').on('click', '#delete-btn', function () {
-    var page = $(this).data('page')
+  $('tbody').on('click', '.btn-del', function () {
     var id = $(this).data('id')
     $.ajax({
       url: '/advert/delete',
       type: 'get',
-      data: {
-        id: id
-      },
+      data: { id: id },
       dataType: 'json',
       success: function (data) {
         if (data.err_code === 0) {
-          // $('#delete-btn').parent().parent().remove()
-          loadAdvert(page)
+          loadPage(currentPage)
         }
       }
     })
   })
+
 </script>
 {% endblock %}

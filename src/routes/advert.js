@@ -16,32 +16,22 @@ router.get('/advert/list', (req, res, next) => {
   let { page, pageSize } = req.query
   page = parseInt(page)
   pageSize = parseInt(pageSize)
+  const result = {}
   Advert
     .find()
     .skip(pageSize * (page - 1))
     .limit(pageSize)
-    .exec((err, data) => {
-      if (err) {
-        return next(err)
-      }
-      res.json({
-        err_code: 0,
-        adverts: data
-      })
+    .then(data => {
+      result.adverts = data
+      return Advert.countDocuments()
+    })
+    .then(data => {
+      result.err_code = 0
+      result.count = data
+      res.json(result)
     })
 })
 
-router.get('/advert/count', (req, res, next) => {
-  Advert.countDocuments((err, data) => {
-    if (err) {
-      return next(err)
-    }
-    res.json({
-      err_code: 0,
-      count: data
-    })
-  })
-})
 
 router.get('/advert/delete', (req, res, next) => {
   const delId = req.query.id
